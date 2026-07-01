@@ -1,8 +1,8 @@
-# Web Development Project 5 - *Name of App Here*
+# Web Development Project 5 - *Meteo-Right?*
 
 Submitted by: **Jason Ames**
 
-This web app: **Meteo-Right?**
+This web app: **Meteo-Right? compares Open-Meteo's rainfall forecasts (issued a fixed number of days in advance) against what actually fell, letting users search any city, filter by forecast accuracy and search by date, and see at a glance whether the model over- or under-predicted rain.**
 
 Time spent: **X** hours spent in total
 
