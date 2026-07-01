@@ -73,38 +73,55 @@ function App() {
     return matchesSearch && matchesAccuracy;
 })
 
-  return (
-    <div>
+return (
+  <div className="app-container">
+    <div className="header">
+      <p className="eyebrow">Forecast vs Observed</p>
       <h1>Meteo-Right?</h1>
-      <div>
-        <p>Total Actual Rainfall: {roundToOneDecimal(totalActual)}mm</p>
-        <p>Total Predicted Rainfall: {roundToOneDecimal(totalPredicted)}mm</p>
-        <p>Average Forecast Error: {roundToOneDecimal(averageError)}mm</p>
-      </div>
+    </div>
 
+    <div className="stats-grid">
+      <div className="stat-card">
+        <p className="stat-label">Total Actual</p>
+        <p className="stat-value actual">{roundToOneDecimal(totalActual)}mm</p>
+      </div>
+      <div className="stat-card">
+        <p className="stat-label">Total Predicted</p>
+        <p className="stat-value predicted">{roundToOneDecimal(totalPredicted)}mm</p>
+      </div>
+      <div className="stat-card">
+        <p className="stat-label">Avg. Error</p>
+        <p className="stat-value">{roundToOneDecimal(averageError)}mm</p>
+      </div>
+    </div>
+
+    <div className="filters">
       <input
         type="text"
         placeholder="Search by date..."
         value={searchTerm}
         onChange={(e) => setSearchTerm(e.target.value)}
       />
-
       <select value={accuracyFilter} onChange={(e) => setAccuracyFilter(e.target.value)}>
         <option value="All">All</option>
         <option value="Accurate">Accurate</option>
         <option value="Overpredicted">Overpredicted</option>
         <option value="Underpredicted">Underpredicted</option>
       </select>
-
-      <ul>
-        {filteredData.map((day) => (
-          <li key={day.date}>
-            {day.date} - Predicted: {roundToOneDecimal(day.predicted)}mm, Actual: {roundToOneDecimal(day.actual)}mm - {day.accuracy}
-          </li>
-        ))}
-      </ul>
     </div>
-  );
+
+    <ul className="list">
+      {filteredData.map((day) => (
+        <li key={day.date} className="list-row">
+          <span className="list-date">{day.date}</span>
+          <span className="predicted">P: {roundToOneDecimal(day.predicted)}mm</span>
+          <span className="actual">A: {roundToOneDecimal(day.actual)}mm</span>
+          <span className={`badge ${day.accuracy}`}>{day.accuracy}</span>
+        </li>
+      ))}
+    </ul>
+  </div>
+);
 }
 
 export default App;
