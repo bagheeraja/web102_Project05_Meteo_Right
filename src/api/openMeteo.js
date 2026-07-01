@@ -68,3 +68,71 @@ export async function fetchPredictedRainfall(latitude, longitude, leadDays) {
   return data.hourly;
 }
 
+/**
+ * Sums hourly predicted rainfall into daily totals. Any day with a missing
+ * hour (e.g. beyond a regional model's forecast horizon at longer lead
+ * times) is left out entirely, rather than reporting a partial total.
+ *
+ * @param {Object} hourly - The "hourly" object returned by
+ *     `fetchPredictedRainfall`, containing a `time` array and a
+ *     `precipitation_previous_dayN` array of equal length.
+ * @param {number} leadDays - The same lead time passed to
+ *     `fetchPredictedRainfall`, used to read the correct field name back
+ *     out of `hourly`.
+ * @return {Object} A plain object mapping each date string (e.g.
+ *     "2026-06-01") to its total predicted rainfall in mm.
+ */
+
+export function aggregateHourlyToDaily(hourly, leadDays) {
+  const variable = `precipitation_previous_day${leadDays}`;
+  const hourlyValues = hourly[variable];
+
+  const dailyTotals = {};
+  const incompleteDays = new Set();
+
+  hourly.time.forEach((timestamp, i) => {
+    const date = timestamp.slice(0, 10);
+    const value = hourlyValues[i];
+
+    if (value === null || value === undefined) {
+      incompleteDays.add(date);
+      return;
+    }
+
+    if (dailyTotals[date] === undefined) {
+      dailyTotals[date] = 0;
+    }
+    dailyTotals[date] += value;
+  });
+
+  incompleteDays.forEach((date) => {
+    delete dailyTotals[date];
+  });
+
+  return dailyTotals;
+}
+
+/**
+ * Merges actual rainfall rows with predicted daily totals into a single
+ * array of combined rows, one per day. Only dates present in both datasets
+ * are kept, since a day without both an actual and a predicted value can't
+ * be compared.
+ *
+ * @param {Array<{date: string, actual: number}>} actualRows - Rows from
+ *     `shapeRainfallData`.
+ * @param {Object} predictedTotals - Date-to-total-rainfall map from
+ *     `aggregateHourlyToDaily`.
+ * @return {Array<{date: string, actual: number, predicted: number}>}
+ *     Combined rows, one per day that has both values.
+ */
+export function mergeRainfallData(actualRows, predictedTotals) {
+  const merged = actualRows.map((row) => {
+    return {
+      date: row.date,
+      actual: row.actual,
+      predicted: predictedTotals[row.date],
+    };
+  });
+
+  return merged.filter((row) => row.predicted !== undefined);
+}
