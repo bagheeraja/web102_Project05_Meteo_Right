@@ -109,14 +109,14 @@ async function handleLocationSearch(e) {
 return (
   <div className="app-container">
     <div className="header">
-      <p className="eyebrow">Forecast vs Observed</p>
+      <p className="eyebrow">Rainfall: Forecast vs Observed</p>
       <h1>Meteo-Right?</h1>
     </div>
 
     <form onSubmit={handleLocationSearch} className="location-form">
       <input
         type="text"
-        placeholder="Search a city..."
+        placeholder="Search a city, city name only..."
         value={locationInput}
         onChange={(e) => setLocationInput(e.target.value)}
       />
