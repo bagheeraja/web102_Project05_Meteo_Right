@@ -5,13 +5,39 @@ import { fetchActualRainfall,
           fetchPredictedRainfall, 
           aggregateHourlyToDaily,
           mergeRainfallData,
-          roundToOneDecimal, } from "./api/openMeteo"
+        } from "./api/openMeteo"
 import './App.css'
 
+/**
+ * Classifies a day's forecast accuracy by comparing predicted to actual
+ * rainfall.
+ *
+ * @param {number} predicted - Predicted rainfall in mm.
+ * @param {number} actual - Actual rainfall in mm.
+ * @return {string} One of "Accurate", "Overpredicted", or "Underpredicted".
+ */
+function classifyAccuracy(predicted, actual) {
+  const diff = predicted - actual;
+  if (Math.abs(diff) <= 2) return "Accurate";
+  if (diff > 2) return "Overpredicted";
+  return "Underpredicted";
+}
+
+/**
+ * Rounds a number to one decimal place, for cleaner on-screen display.
+ *
+ * @param {number} value - The number to round.
+ * @return {number} The value rounded to one decimal place.
+ */
+export function roundToOneDecimal(value) {
+  return Math.round(value * 10) / 10;
+}
 
 function App() {
 
   const [rainfallData, setRainfallData] = useState([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [accuracyFilter, setAccuracyFilter] = useState("All");
 
   useEffect(() => {
     async function loadData() {
@@ -22,8 +48,15 @@ function App() {
       const predictedTotals = aggregateHourlyToDaily(hourly, 3);
       
       const merged = mergeRainfallData(actualRows, predictedTotals);
-      console.log(merged);
-      setRainfallData(merged);
+
+      const classified = merged.map((row) => {
+        return {
+          ...row,
+          accuracy: classifyAccuracy(row.predicted, row.actual),
+        }
+      })
+
+      setRainfallData(classified);
     }
 
     loadData();
@@ -34,6 +67,12 @@ function App() {
   const totalError = rainfallData.reduce((sum, day) => sum + Math.abs(day.predicted - day.actual), 0);
   const averageError = rainfallData.length > 0 ? totalError / rainfallData.length : 0;
 
+  const filteredData = rainfallData.filter((day) => {
+    const matchesSearch = day.date.includes(searchTerm);
+    const matchesAccuracy = accuracyFilter === "All" || day.accuracy === accuracyFilter;
+    return matchesSearch && matchesAccuracy;
+})
+
   return (
     <div>
       <h1>Meteo-Right?</h1>
@@ -42,10 +81,25 @@ function App() {
         <p>Total Predicted Rainfall: {roundToOneDecimal(totalPredicted)}mm</p>
         <p>Average Forecast Error: {roundToOneDecimal(averageError)}mm</p>
       </div>
+
+      <input
+        type="text"
+        placeholder="Search by date..."
+        value={searchTerm}
+        onChange={(e) => setSearchTerm(e.target.value)}
+      />
+
+      <select value={accuracyFilter} onChange={(e) => setAccuracyFilter(e.target.value)}>
+        <option value="All">All</option>
+        <option value="Accurate">Accurate</option>
+        <option value="Overpredicted">Overpredicted</option>
+        <option value="Underpredicted">Underpredicted</option>
+      </select>
+
       <ul>
-        {rainfallData.map((day) => (
+        {filteredData.map((day) => (
           <li key={day.date}>
-            {day.date} - Predicted: {roundToOneDecimal(day.predicted)}mm, Actual: {roundToOneDecimal(day.actual)}mm
+            {day.date} - Predicted: {roundToOneDecimal(day.predicted)}mm, Actual: {roundToOneDecimal(day.actual)}mm - {day.accuracy}
           </li>
         ))}
       </ul>
