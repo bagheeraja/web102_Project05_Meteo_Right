@@ -27,11 +27,21 @@ function App() {
     }
 
     loadData();
-  }, []); 
+  }, []);
+
+  const totalActual = rainfallData.reduce((sum, day) => sum + day.actual, 0);
+  const totalPredicted = rainfallData.reduce((sum, day) => sum + day.predicted, 0);
+  const totalError = rainfallData.reduce((sum, day) => sum + Math.abs(day.predicted - day.actual), 0);
+  const averageError = rainfallData.length > 0 ? totalError / rainfallData.length : 0;
 
   return (
     <div>
       <h1>Meteo-Right?</h1>
+      <div>
+        <p>Total Actual Rainfall: {roundToOneDecimal(totalActual)}mm</p>
+        <p>Total Predicted Rainfall: {roundToOneDecimal(totalPredicted)}mm</p>
+        <p>Average Forecast Error: {roundToOneDecimal(averageError)}mm</p>
+      </div>
       <ul>
         {rainfallData.map((day) => (
           <li key={day.date}>
