@@ -42,3 +42,29 @@ export function shapeRainfallData(daily) {
         }
     })
 }
+
+/**
+ * Fetches predicted rainfall for a location, frozen at a fixed forecast
+ * lead time, from the Open-Meteo Previous Runs API. Returns hourly data —
+ * there is no daily-sum version of this dataset.
+ *
+ * API docs: https://open-meteo.com/en/docs/previous-runs-api
+ *
+ * @param {number} latitude - Latitude of the location, in decimal degrees.
+ * @param {number} longitude - Longitude of the location, in decimal degrees.
+ * @param {number} leadDays - How many days before the valid date the
+ *     forecast was issued (e.g. 3 = "what the model predicted 3 days out").
+ * @return {Promise<Object>} The API's "hourly" object, containing parallel
+ *     arrays `time` (timestamps) and `precipitation_previous_dayN` (mm of
+ *     rain per hour, indexed to match `time`).
+ */
+export async function fetchPredictedRainfall(latitude, longitude, leadDays) {
+  const variable = `precipitation_previous_day${leadDays}`;
+  const url = `https://previous-runs-api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&hourly=${variable}&past_days=30&forecast_days=1&timezone=auto`;
+
+  const response = await fetch(url);
+  const data = await response.json();
+
+  return data.hourly;
+}
+
