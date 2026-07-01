@@ -44,7 +44,10 @@ The following **optional** features are implemented:
 
 The following **additional** features are implemented:
 
-* [ ] List anything else that you added to improve the site's functionality!
+* Location search — users can look up any city worldwide via the Open-Meteo Geocoding API, rather than a fixed hardcoded location
+* Predicted rainfall is sourced from Open-Meteo's Previous Runs API at a fixed 3-day forecast lead time, rather than a same-day model estimate — a true "what was forecast in advance" comparison
+* Custom accuracy classification (Accurate / Overpredicted / Underpredicted) derived from comparing predicted vs. actual rainfall, used to power the category filter
+* Custom two-tone favicon reflecting the app's predicted (amber) vs. actual (cyan) color scheme
 
 ## Video Walkthrough
 
@@ -62,7 +65,11 @@ GIF created with LiceCAP
 
 ## Notes
 
-Describe any challenges encountered while building the app.
+- The Previous Runs API only exposes **hourly** precipitation data — there's no daily-sum shortcut like the Archive API has. Had to manually aggregate 24 hourly values into a daily total, and explicitly handle days where an hour was missing (e.g. beyond a regional model's forecast horizon) rather than silently under-counting.
+- Initially pointed the "predicted" fetch at the wrong API subdomain (`historical-forecast-api` instead of `previous-runs-api`), which returned an HTTP 400 that surfaced as a generic "service unavailable" error — a good reminder to check the actual response body/status before assuming a request is malformed.
+- The geocoding API matches plain city names only — searching `"Seattle, WA"` (with the state) returned zero results, since the API doesn't parse `"City, State"` formatting. Fixed by stripping the query down to just the city name before searching.
+- Two separate API calls (actual rainfall and predicted rainfall) each independently computed "N days back from today," which caused their date ranges to drift out of sync and silently shrunk the merged dataset. Fixed by anchoring both calculations off the same reference date instead of each computing its own.
+- Floating-point arithmetic produced long decimal artifacts (e.g. `29.599999999999998`) when summing hourly values — resolved by rounding only at the final display step, not during intermediate calculations.
 
 ## License
 
