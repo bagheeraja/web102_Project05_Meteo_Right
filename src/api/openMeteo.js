@@ -136,3 +136,13 @@ export function mergeRainfallData(actualRows, predictedTotals) {
 
   return merged.filter((row) => row.predicted !== undefined);
 }
+
+/**
+ * Rounds a number to one decimal place, for cleaner on-screen display.
+ *
+ * @param {number} value - The number to round.
+ * @return {number} The value rounded to one decimal place.
+ */
+export function roundToOneDecimal(value) {
+  return Math.round(value * 10) / 10;
+}

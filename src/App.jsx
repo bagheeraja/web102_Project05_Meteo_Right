@@ -4,7 +4,8 @@ import { fetchActualRainfall,
           shapeRainfallData, 
           fetchPredictedRainfall, 
           aggregateHourlyToDaily,
-          mergeRainfallData } from "./api/openMeteo"
+          mergeRainfallData,
+          roundToOneDecimal, } from "./api/openMeteo"
 import './App.css'
 
 
@@ -34,7 +35,7 @@ function App() {
       <ul>
         {rainfallData.map((day) => (
           <li key={day.date}>
-            {day.date}: {day.actual}mm
+            {day.date} - Predicted: {roundToOneDecimal(day.predicted)}mm, Actual: {roundToOneDecimal(day.actual)}mm
           </li>
         ))}
       </ul>

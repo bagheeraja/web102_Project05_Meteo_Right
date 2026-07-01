@@ -15,15 +15,15 @@ This app pulls data from [Open-Meteo](https://open-meteo.com), a free weather AP
   https://open-meteo.com/en/docs/previous-runs-api
 - **Historical Weather (Archive) API** — actual observed rainfall (ERA5 reanalysis), used as ground truth
   https://open-meteo.com/en/docs/historical-weather-api
-  
+
 ## Required Features
 
 The following **required** functionality is completed:
 
-- [ ] **The site has a dashboard displaying a list of data fetched using an API call**
+- [X] **The site has a dashboard displaying a list of data fetched using an API call**
   - The dashboard should display at least 10 unique items, one per row
   - The dashboard includes at least two features in each row
-- [ ] **`useEffect` React hook and `async`/`await` are used**
+- [X] **`useEffect` React hook and `async`/`await` are used**
 - [ ] **The app dashboard includes at least three summary statistics about the data** 
   - The app dashboard includes at least three summary statistics about the data, such as:
     - *insert details here*
