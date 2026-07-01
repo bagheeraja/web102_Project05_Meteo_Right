@@ -5,6 +5,7 @@ import { fetchActualRainfall,
           fetchPredictedRainfall, 
           aggregateHourlyToDaily,
           mergeRainfallData,
+          fetchLocationOptions,
         } from "./api/openMeteo"
 import './App.css'
 
@@ -38,13 +39,32 @@ function App() {
   const [rainfallData, setRainfallData] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [accuracyFilter, setAccuracyFilter] = useState("All");
+  const [location, setLocation] = useState({
+    latitude: 1.3521,
+    longitude: 103.8198,
+    name: "Singapore"
+  });
+  const [locationInput, setLocationInput] = useState("Singapore");
 
   useEffect(() => {
     async function loadData() {
-      const daily = await fetchActualRainfall(29.5844, -81.2078, "2026-06-01", "2026-06-10");
+      const today = new Date();
+
+      const endDate = new Date(today);
+      endDate.setDate(endDate.getDate() - 5);
+      const endDateStr = endDate.toISOString().slice(0, 10);
+      
+      const startDate = new Date(endDate);
+      startDate.setDate(startDate.getDate() - 30);
+      const startDateStr = startDate.toISOString().slice(0, 10);
+
+      const msPerDay = 1000 * 60 * 60 * 24;
+      const pastDaysNeeded = Math.ceil((today - startDate) / msPerDay);
+      
+      const daily = await fetchActualRainfall(location.latitude, location.longitude, startDateStr, endDateStr);
       const actualRows = shapeRainfallData(daily)
 
-      const hourly = await fetchPredictedRainfall(29.5844, -81.2078, 3);
+      const hourly = await fetchPredictedRainfall(location.latitude, location.longitude, 3, pastDaysNeeded);
       const predictedTotals = aggregateHourlyToDaily(hourly, 3);
       
       const merged = mergeRainfallData(actualRows, predictedTotals);
@@ -60,7 +80,7 @@ function App() {
     }
 
     loadData();
-  }, []);
+  }, [location]);
 
   const totalActual = rainfallData.reduce((sum, day) => sum + day.actual, 0);
   const totalPredicted = rainfallData.reduce((sum, day) => sum + day.predicted, 0);
@@ -73,12 +93,36 @@ function App() {
     return matchesSearch && matchesAccuracy;
 })
 
+async function handleLocationSearch(e) {
+  e.preventDefault();
+  const results = await fetchLocationOptions(locationInput);
+  if (results.length > 0) {
+    const first = results[0];
+    setLocation({
+      latitude: first.latitude,
+      longitude: first.longitude,
+      name: first.name,
+    });
+  }
+}
+
 return (
   <div className="app-container">
     <div className="header">
       <p className="eyebrow">Forecast vs Observed</p>
       <h1>Meteo-Right?</h1>
     </div>
+
+    <form onSubmit={handleLocationSearch} className="location-form">
+      <input
+        type="text"
+        placeholder="Search a city..."
+        value={locationInput}
+        onChange={(e) => setLocationInput(e.target.value)}
+      />
+      <button type="submit">Go</button>
+    </form>
+<p className="location-label">Showing: {location.name}</p>
 
     <div className="stats-grid">
       <div className="stat-card">

@@ -54,13 +54,16 @@ export function shapeRainfallData(daily) {
  * @param {number} longitude - Longitude of the location, in decimal degrees.
  * @param {number} leadDays - How many days before the valid date the
  *     forecast was issued (e.g. 3 = "what the model predicted 3 days out").
+ * @param {number} pastDays - How many days back from today to request
+ *     hourly data for. Should be chosen to fully cover the date range used
+ *     for actual rainfall, so the two datasets overlap completely.
  * @return {Promise<Object>} The API's "hourly" object, containing parallel
  *     arrays `time` (timestamps) and `precipitation_previous_dayN` (mm of
  *     rain per hour, indexed to match `time`).
  */
-export async function fetchPredictedRainfall(latitude, longitude, leadDays) {
+export async function fetchPredictedRainfall(latitude, longitude, leadDays, pastDays) {
   const variable = `precipitation_previous_day${leadDays}`;
-  const url = `https://previous-runs-api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&hourly=${variable}&past_days=30&forecast_days=1&timezone=auto`;
+  const url = `https://previous-runs-api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&hourly=${variable}&past_days=${pastDays}&forecast_days=1&timezone=auto`;
 
   const response = await fetch(url);
   const data = await response.json();
@@ -135,4 +138,26 @@ export function mergeRainfallData(actualRows, predictedTotals) {
   });
 
   return merged.filter((row) => row.predicted !== undefined);
+}
+
+/**
+ * Looks up latitude/longitude for a place name using the Open-Meteo
+ * Geocoding API.
+ *
+ * API docs: https://open-meteo.com/en/docs/geocoding-api
+ *
+ * @param {string} placeName - A city name, e.g. "Chicago". Do not include
+ *     state or country (e.g. "Chicago, IL") — the API matches on plain
+ *     city names only.
+ * @return {Promise<Array<Object>>} An array of matching locations, each
+ *     with at least `name`, `latitude`, `longitude`, `country`, and
+ *     `admin1` (state/region) fields. Empty array if nothing matched.
+ */
+export async function fetchLocationOptions(placeName) {
+  const url = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(placeName)}&count=5&language=en&format=json`;
+
+  const response = await fetch(url);
+  const data = await response.json();
+
+  return data.results ?? [];
 }
