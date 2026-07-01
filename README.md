@@ -4,7 +4,7 @@ Submitted by: **Jason Ames**
 
 This web app: **Meteo-Right? compares Open-Meteo's rainfall forecasts (issued a fixed number of days in advance) against what actually fell, letting users search any city, filter by forecast accuracy and search by date, and see at a glance whether the model over- or under-predicted rain.**
 
-Time spent: **X** hours spent in total
+Time spent: **5** hours spent in total
 
 ## APIs Used
 This app pulls data from [Open-Meteo](https://open-meteo.com), a free weather API that requires no signup or API key.
