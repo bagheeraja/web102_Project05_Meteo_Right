@@ -32,7 +32,10 @@ The following **optional** features are implemented:
   
 The following **additional** features are implemented:
 
-* [ ] List anything else that you added to improve the site's functionality!
+* A shared sidebar (persistent across all pages) with navigation, a color-coded accuracy legend, and data attribution
+* Clicking a row's colors/badges carries through consistently across the dashboard, detail view, sidebar legend, and both charts — one visual language for "predicted" (amber), "actual" (cyan), and each accuracy category, rather than each part of the UI inventing its own colors
+* The detail view fetches its own data independently by date and location (via URL query parameters), so each day's link is genuinely shareable/bookmarkable on its own, without requiring a prior visit to the dashboard
+* Predicted rainfall API calls were optimized to request only the exact date range needed (via `start_date`/`end_date`) rather than a wider rolling window, notably speeding up the detail view
 
 ## Video Walkthrough
 
@@ -50,6 +53,11 @@ GIF created with LICEcap
 ## Notes
 
 Describe any challenges encountered while building the app.
+
+- Migrating from a single `App.jsx` to React Router's page structure required moving state and logic into `Dashboard.jsx`, which meant every relative import path (`./api/openMeteo` → `../api/openMeteo`) needed updating too — a reminder that moving a file changes its relationship to everything it imports, not just its own contents.
+- The detail view initially reused the dashboard's fetch pattern (computing "days back from today"), but that only works if you already know *today's* offset from the target date. Realized the detail page needed to accept location as URL query parameters (`?lat=...&lon=...&name=...`), not just the date as a path parameter — otherwise a direct/shared link to a detail page would have no way of knowing which location's data to fetch.
+- Wrapping each list row in a `<Link>` broke the existing column layout, since `justify-content: space-between` was applied to the row (`<li>`) itself — once `Link` became the row's only direct child, there was nothing left to space apart. Fixed by moving the flex/grid layout onto the `Link` itself, matching where the actual content lived. This also surfaced a subtler issue: Flexbox distributes space based on content width, so columns of different-length text didn't align vertically row to row — switching to CSS Grid with fixed column widths solved this properly.
+- The Previous Runs API's default fetch pattern (a rolling window of "past N days from today") was significantly slower on the detail page than necessary, since it fetched hundreds of unused hourly values just to extract one day's worth. Switching the API call to accept an explicit `start_date`/`end_date` range instead of a day-count noticeably improved load time — a good example of an API being technically correct but inefficient for a particular use case.
 
 ## License
 
