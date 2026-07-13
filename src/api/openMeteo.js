@@ -61,9 +61,9 @@ export function shapeRainfallData(daily) {
  *     arrays `time` (timestamps) and `precipitation_previous_dayN` (mm of
  *     rain per hour, indexed to match `time`).
  */
-export async function fetchPredictedRainfall(latitude, longitude, leadDays, pastDays) {
+export async function fetchPredictedRainfall(latitude, longitude, leadDays, startDate, endDate) {
   const variable = `precipitation_previous_day${leadDays}`;
-  const url = `https://previous-runs-api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&hourly=${variable}&past_days=${pastDays}&forecast_days=1&timezone=auto`;
+  const url = `https://previous-runs-api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&hourly=${variable}&start_date=${startDate}&end_date=${endDate}&timezone=auto`;
 
   const response = await fetch(url);
   const data = await response.json();

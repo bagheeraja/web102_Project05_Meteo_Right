@@ -9,31 +9,8 @@ import { fetchActualRainfall,
           fetchLocationOptions,
         } from "../api/openMeteo"
 import '../Dashboard.css'
-
-/**
- * Classifies a day's forecast accuracy by comparing predicted to actual
- * rainfall.
- *
- * @param {number} predicted - Predicted rainfall in mm.
- * @param {number} actual - Actual rainfall in mm.
- * @return {string} One of "Accurate", "Overpredicted", or "Underpredicted".
- */
-function classifyAccuracy(predicted, actual) {
-  const diff = predicted - actual;
-  if (Math.abs(diff) <= 2) return "Accurate";
-  if (diff > 2) return "Overpredicted";
-  return "Underpredicted";
-}
-
-/**
- * Rounds a number to one decimal place, for cleaner on-screen display.
- *
- * @param {number} value - The number to round.
- * @return {number} The value rounded to one decimal place.
- */
-export function roundToOneDecimal(value) {
-  return Math.round(value * 10) / 10;
-}
+import { classifyAccuracy, roundToOneDecimal } from "../utils.js"
+import { BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 
 function Dashboard() {
 
@@ -65,7 +42,7 @@ function Dashboard() {
       const daily = await fetchActualRainfall(location.latitude, location.longitude, startDateStr, endDateStr);
       const actualRows = shapeRainfallData(daily)
 
-      const hourly = await fetchPredictedRainfall(location.latitude, location.longitude, 3, pastDaysNeeded);
+      const hourly = await fetchPredictedRainfall(location.latitude, location.longitude, 3, startDateStr, endDateStr);
       const predictedTotals = aggregateHourlyToDaily(hourly, 3);
       
       const merged = mergeRainfallData(actualRows, predictedTotals);
@@ -87,6 +64,12 @@ function Dashboard() {
   const totalPredicted = rainfallData.reduce((sum, day) => sum + day.predicted, 0);
   const totalError = rainfallData.reduce((sum, day) => sum + Math.abs(day.predicted - day.actual), 0);
   const averageError = rainfallData.length > 0 ? totalError / rainfallData.length : 0;
+  const accuracyCounts = ["Accurate", "Overpredicted", "Underpredicted"].map((category) => {
+    return {
+        name: category,
+        value: rainfallData.filter((day) => day.accuracy === category).length,
+        };
+    });
 
   const filteredData = rainfallData.filter((day) => {
     const matchesSearch = day.date.includes(searchTerm);
@@ -138,6 +121,47 @@ return (
         <p className="stat-label">Avg. Error</p>
         <p className="stat-value">{roundToOneDecimal(averageError)}mm</p>
       </div>
+    </div>
+
+    <div className="chart-card">
+    <h2>Predicted vs. Actual Rainfall</h2>
+        <ResponsiveContainer width="100%" height={250}>
+            <BarChart data={rainfallData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
+                <XAxis dataKey="date" tick={{ fontSize: 11 }} stroke="#64748b" />
+                <YAxis stroke="#64748b" />
+                <Tooltip
+                    contentStyle={{ background: "#0f172a", border: "1px solid #1e293b" }}
+                    formatter={(value) => roundToOneDecimal(value)}
+                />
+                <Legend />
+                <Bar dataKey="predicted" fill="#fbbf24" name="Predicted (mm)" />
+                <Bar dataKey="actual" fill="#22d3ee" name="Actual (mm)" />
+            </BarChart>
+        </ResponsiveContainer>
+    </div>
+
+    <div className="chart-card">
+    <h2>Forecast Accuracy Breakdown</h2>
+        <ResponsiveContainer width="100%" height={250}>
+            <PieChart>
+                <Pie
+                    data={accuracyCounts}
+                    dataKey="value"
+                    nameKey="name"
+                    cx="50%"
+                    cy="50%"
+                    outerRadius={80}
+                    label
+                >
+                    <Cell fill="#34d399" />
+                    <Cell fill="#fbbf24" />
+                    <Cell fill="#fb7185" />
+                </Pie>
+                <Tooltip contentStyle={{ background: "#0f172a", border: "1px solid #1e293b" }} />
+                <Legend />
+            </PieChart>
+        </ResponsiveContainer>
     </div>
 
     <div className="filters">
